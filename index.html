@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>KI-ROI-Rechner | Sozius AI Automation</title>
+  <title>KI-Potenzial-Rechner | Sozius AI Automation</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -437,7 +437,7 @@
   <div class="header">
     <div class="header-badge">
       <span class="dot"></span>
-      Kostenloser KI-ROI-Rechner
+      Kostenloses KI-Potenzial-Tool
     </div>
     <h1>Was bringt KI Ihrem Unternehmen?</h1>
     <p>Berechnen Sie in 60 Sekunden, welchen Return on Investment Sie mit KI-Automatisierung realistisch erzielen können.</p>
@@ -515,25 +515,6 @@
         <div class="slider-range"><span>10 %</span><span>90 %</span></div>
       </div>
 
-      <div class="slider-row">
-        <div class="slider-label-row">
-          <label>Implementierungskosten (einmalig)</label>
-          <span class="slider-value" id="val-impl">25.000 €</span>
-        </div>
-        <input type="range" id="sl-impl" min="2000" max="200000" step="1000" value="25000"
-          oninput="document.getElementById('val-impl').textContent=Number(this.value).toLocaleString('de-DE')+' €'; calculate()">
-        <div class="slider-range"><span>2.000 €</span><span>200.000 €</span></div>
-      </div>
-
-      <div class="slider-row">
-        <div class="slider-label-row">
-          <label>Monatliche Betriebskosten</label>
-          <span class="slider-value" id="val-opex">2.000 €</span>
-        </div>
-        <input type="range" id="sl-opex" min="100" max="10000" step="100" value="2000"
-          oninput="document.getElementById('val-opex').textContent=Number(this.value).toLocaleString('de-DE')+' €'; calculate()">
-        <div class="slider-range"><span>100 €</span><span>10.000 €</span></div>
-      </div>
     </div>
 
     <!-- Right: Outputs -->
@@ -541,20 +522,16 @@
 
       <!-- Hero KPI -->
       <div class="hero-metric">
-        <div class="label">Jährliche Netto-Einsparung (ab Jahr 2)</div>
-        <div class="value" id="out-net">343.500 €</div>
-        <div class="hero-kpis">
+        <div class="label">Freigesetzter Zeitwert / Jahr</div>
+        <div class="value" id="out-net">0 €</div>
+        <div class="hero-kpis" style="grid-template-columns: repeat(2, 1fr);">
           <div class="kpi-item">
-            <div class="kpi-label">Break-even</div>
-            <div class="kpi-val" id="out-be">1 Monat</div>
+            <div class="kpi-label">Freigesetzte Stunden / Jahr</div>
+            <div class="kpi-val" id="out-hours">0 Std.</div>
           </div>
           <div class="kpi-item">
-            <div class="kpi-label">3-Jahres-ROI</div>
-            <div class="kpi-val" id="out-roi">4.022 %</div>
-          </div>
-          <div class="kpi-item">
-            <div class="kpi-label">5-Jahres-Gewinn</div>
-            <div class="kpi-val" id="out-5y">1.692.500 €</div>
+            <div class="kpi-label">5-Jahres-Potenzial</div>
+            <div class="kpi-val" id="out-5y">0 €</div>
           </div>
         </div>
       </div>
@@ -564,7 +541,7 @@
 
         <!-- Breakdown -->
         <div class="glass">
-          <p class="glass-title">Kostenaufschlüsselung / Jahr</p>
+          <p class="glass-title">Werttreiber / Jahr</p>
 
           <div class="breakdown-row">
             <div class="breakdown-top">
@@ -605,20 +582,11 @@
             </div>
           </div>
 
-          <hr class="breakdown-divider">
-
-          <div class="breakdown-opex">
-            <div class="breakdown-opex-name">
-              <span class="breakdown-dot" style="background:#f87171"></span>
-              Betriebskosten (p.a.)
-            </div>
-            <span class="breakdown-opex-val" id="out-opex-display">−24.000 €</span>
-          </div>
         </div>
 
         <!-- Chart -->
         <div class="glass chart-wrap" style="padding:1.25rem;">
-          <p class="glass-title">5-Jahres-Projektion</p>
+          <p class="glass-title">Kumuliertes Potenzial</p>
           <canvas id="roi-chart"></canvas>
         </div>
 
@@ -634,7 +602,7 @@
       <p>Ich analysiere Ihr Unternehmen und zeige konkrete Automatisierungspotenziale — ohne Software zu verkaufen.</p>
     </div>
     <a href="https://sozius.site/#kontakt" class="btn-cyan">
-      Kostenloses Erstgespräch buchen
+      Jetzt Investitionsrahmen besprechen
       <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
       </svg>
@@ -673,54 +641,32 @@
     const wage      = +document.getElementById('sl-wage').value;
     const hours     = +document.getElementById('sl-hours').value;
     const autoRate  = +document.getElementById('sl-auto').value / 100;
-    const implCost  = +document.getElementById('sl-impl').value;
-    const opexMo    = +document.getElementById('sl-opex').value;
 
     const sc = scenarios[activeScenario];
-    const opexAnnual = opexMo * 12;
 
-    const personnel   = employees * hours * 52 * wage * autoRate;
-    const errors      = personnel * sc.errorFactor;
+    const personnel    = employees * hours * 52 * wage * autoRate;
+    const errors       = personnel * sc.errorFactor;
     const productivity = personnel * sc.productivityFactor;
-    const total       = personnel + errors + productivity;
-    const netAnnual   = total - opexAnnual;
-
-    // Break-even
-    let beText;
-    if (netAnnual <= 0) {
-      beText = 'N/A';
-    } else {
-      const m = implCost / (netAnnual / 12);
-      if (m < 1)       beText = '< 1 Monat';
-      else if (m < 1.5) beText = '1 Monat';
-      else if (m < 12)  beText = Math.ceil(m) + ' Monate';
-      else              beText = (m / 12).toFixed(1).replace('.', ',') + ' Jahre';
-    }
-
-    const roi3y = implCost > 0 ? ((netAnnual * 3 - implCost) / implCost * 100) : 0;
-    const gain5y = netAnnual * 5 - implCost;
+    const total        = personnel + errors + productivity;
+    const freedHours   = employees * hours * 52 * autoRate;
 
     // Bars
     const w = (v) => total > 0 ? Math.max(2, v / total * 100).toFixed(1) + '%' : '0%';
 
-    // Update
-    setText('out-net', fmt(netAnnual));
-    setText('out-be', beText);
-    setText('out-roi', roi3y > 0 ? roi3y.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' %' : 'N/A');
-    setText('out-5y', fmt(gain5y));
+    setText('out-net', fmt(total));
+    setText('out-hours', Math.round(freedHours).toLocaleString('de-DE') + ' Std.');
+    setText('out-5y', fmt(total * 5));
     setText('out-personnel', fmt(personnel));
     setText('out-errors', fmt(errors));
     setText('out-productivity', fmt(productivity));
-    setText('out-opex-display', '−' + fmt(opexAnnual));
 
-    document.getElementById('bar-personnel').style.width   = w(personnel);
-    document.getElementById('bar-errors').style.width      = w(errors);
+    document.getElementById('bar-personnel').style.width    = w(personnel);
+    document.getElementById('bar-errors').style.width       = w(errors);
     document.getElementById('bar-productivity').style.width = w(productivity);
 
     animate('out-net');
-    animate('out-roi');
 
-    updateChart(implCost, netAnnual);
+    updateChart(total);
   }
 
   function setText(id, val) {
@@ -733,10 +679,10 @@
     el.classList.add('animating');
   }
 
-  function updateChart(implCost, netAnnual) {
+  function updateChart(total) {
     const labels = ['Start','Jahr 1','Jahr 2','Jahr 3','Jahr 4','Jahr 5'];
-    const data   = Array.from({length:6}, (_,i) => -implCost + netAnnual * i);
-    const ptColors = data.map(v => v >= 0 ? '#22d3ee' : '#f87171');
+    const data   = Array.from({length:6}, (_,i) => total * i);
+    const ptColors = data.map(() => '#22d3ee');
 
     if (chart) {
       chart.data.datasets[0].data = data;
