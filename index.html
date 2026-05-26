@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KI-ROI-Rechner | Sozius AI Automation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-deep:    #080f1e;
+      --bg-navy:    #0a1628;
+      --bg-card:    rgba(13, 25, 55, 0.7);
+      --border:     rgba(34, 211, 238, 0.18);
+      --border-dim: rgba(255,255,255,0.08);
+      --cyan:       #22d3ee;
+      --cyan-dim:   rgba(34, 211, 238, 0.15);
+      --cyan-glow:  rgba(34, 211, 238, 0.3);
+      --text:       #f0f4ff;
+      --text-muted: rgba(180, 200, 230, 0.65);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Circuit background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 30%, rgba(34,211,238,0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(79,70,229,0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* --- HEADER --- */
+    .header {
+      padding: 3.5rem 0 2.5rem;
+      text-align: center;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid var(--border);
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+    }
+    .header-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--cyan);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(1.3); }
+    }
+    .header h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+    .header p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 540px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* --- SCENARIO CARDS --- */
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (max-width: 640px) {
+      .scenario-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    .scenario-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 14px;
+      padding: 1.1rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: left;
+      backdrop-filter: blur(8px);
+    }
+    .scenario-card:hover {
+      border-color: rgba(34,211,238,0.35);
+      transform: translateY(-2px);
+    }
+    .scenario-card.active {
+      border-color: var(--cyan);
+      background: rgba(34, 211, 238, 0.08);
+      box-shadow: 0 0 20px rgba(34,211,238,0.15);
+    }
+    .scenario-icon {
+      font-size: 1.4rem;
+      margin-bottom: 0.6rem;
+      display: block;
+    }
+    .scenario-card .s-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .scenario-card .s-sub {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      line-height: 1.3;
+    }
+    .scenario-card.active .s-title { color: var(--cyan); }
+
+    /* --- MAIN GRID --- */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 3fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 768px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* --- GLASS CARD --- */
+    .glass {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 18px;
+      backdrop-filter: blur(12px);
+      padding: 1.5rem;
+    }
+    .glass-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1.4rem;
+    }
+
+    /* --- SLIDERS --- */
+    .slider-row {
+      margin-bottom: 1.5rem;
+    }
+    .slider-row:last-child { margin-bottom: 0; }
+    .slider-label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .slider-label-row label {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+    .slider-value {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--cyan);
+      font-variant-numeric: tabular-nums;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.12);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--cyan);
+      cursor: pointer;
+      box-shadow: 0 0 0 3px var(--cyan-glow);
+      transition: box-shadow 0.2s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      box-shadow: 0 0 0 6px var(--cyan-glow);
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--cyan);
+      border: none;
+      cursor: pointer;
+    }
+    .slider-range {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.25);
+      margin-top: 0.3rem;
+    }
+
+    /* --- HERO METRIC --- */
+    .hero-metric {
+      background: linear-gradient(135deg, rgba(34,211,238,0.12) 0%, rgba(79,70,229,0.1) 100%);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 0 40px rgba(34,211,238,0.08);
+    }
+    .hero-metric .label {
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: rgba(34,211,238,0.7);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.4rem;
+    }
+    .hero-metric .value {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.6rem;
+      font-weight: 700;
+      color: var(--cyan);
+      letter-spacing: -0.02em;
+      line-height: 1;
+      margin-bottom: 1.2rem;
+      font-variant-numeric: tabular-nums;
+    }
+    .hero-kpis {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(34,211,238,0.15);
+    }
+    .kpi-item .kpi-label {
+      font-size: 0.68rem;
+      color: rgba(34,211,238,0.6);
+      margin-bottom: 0.2rem;
+    }
+    .kpi-item .kpi-val {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* --- BREAKDOWN --- */
+    .breakdown-row {
+      margin-bottom: 1rem;
+    }
+    .breakdown-row:last-child { margin-bottom: 0; }
+    .breakdown-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+    .breakdown-name {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .breakdown-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .breakdown-val {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+    }
+    .breakdown-bar-bg {
+      height: 3px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .breakdown-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.5s ease;
+    }
+    .breakdown-divider {
+      border: none;
+      border-top: 1px dashed rgba(255,255,255,0.1);
+      margin: 0.75rem 0;
+    }
+    .breakdown-opex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .breakdown-opex-name {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+    .breakdown-opex-val {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #f87171;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* --- CHART --- */
+    .chart-wrap {
+      padding: 1.25rem;
+    }
+
+    /* --- CTA --- */
+    .cta-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 18px;
+      padding: 2rem 2.5rem;
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      backdrop-filter: blur(12px);
+      gap: 1rem;
+    }
+    @media (min-width: 640px) {
+      .cta-section {
+        flex-direction: row;
+        text-align: left;
+        justify-content: space-between;
+      }
+    }
+    .cta-section h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+    .cta-section p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .btn-cyan {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--cyan);
+      color: #080f1e;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 0.75rem 1.75rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(34,211,238,0.3);
+    }
+    .btn-cyan:hover {
+      background: #67e8f9;
+      box-shadow: 0 6px 28px rgba(34,211,238,0.45);
+      transform: translateY(-1px);
+    }
+
+    /* --- DISCLAIMER --- */
+    .disclaimer {
+      text-align: center;
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.2);
+      margin-top: 1.25rem;
+      padding-bottom: 3rem;
+    }
+
+    /* Value animation */
+    @keyframes fadeUp {
+      from { opacity: 0.4; transform: translateY(5px); }
+      to   { opacity: 1;   transform: translateY(0); }
+    }
+    .animating { animation: fadeUp 0.25s ease; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-badge">
+      <span class="dot"></span>
+      Kostenloser KI-ROI-Rechner
+    </div>
+    <h1>Was bringt KI Ihrem Unternehmen?</h1>
+    <p>Berechnen Sie in 60 Sekunden, welchen Return on Investment Sie mit KI-Automatisierung realistisch erzielen können.</p>
+  </div>
+
+  <!-- Scenarios -->
+  <p class="section-label">Schritt 1 — Anwendungsfall wählen</p>
+  <div class="scenario-grid">
+    <button class="scenario-card active" id="sc-0" onclick="setScenario(0)">
+      <span class="scenario-icon">💬</span>
+      <div class="s-title">Kundenservice­automatisierung</div>
+      <div class="s-sub">Chatbot, Ticket-Klassifizierung</div>
+    </button>
+    <button class="scenario-card" id="sc-1" onclick="setScenario(1)">
+      <span class="scenario-icon">📄</span>
+      <div class="s-title">Dokumenten­verarbeitung</div>
+      <div class="s-sub">OCR, Extraktion, Klassifizierung</div>
+    </button>
+    <button class="scenario-card" id="sc-2" onclick="setScenario(2)">
+      <span class="scenario-icon">🔍</span>
+      <div class="s-title">Qualitäts­kontrolle</div>
+      <div class="s-sub">Fehlerreduktion, Compliance</div>
+    </button>
+    <button class="scenario-card" id="sc-3" onclick="setScenario(3)">
+      <span class="scenario-icon">⚙️</span>
+      <div class="s-title">Prozess­automatisierung</div>
+      <div class="s-sub">Workflow, RPA, Integration</div>
+    </button>
+  </div>
+
+  <!-- Main Grid -->
+  <div class="main-grid">
+
+    <!-- Left: Inputs -->
+    <div class="glass">
+      <p class="glass-title">Schritt 2 — Parameter anpassen</p>
+
+      <div class="slider-row">
+        <div class="slider-label-row">
+          <label>Betroffene Mitarbeiter</label>
+          <span class="slider-value" id="val-employees">10</span>
+        </div>
+        <input type="range" id="sl-employees" min="1" max="100" value="10"
+          oninput="document.getElementById('val-employees').textContent=this.value; calculate()">
+        <div class="slider-range"><span>1</span><span>100</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label-row">
+          <label>Ø Brutto-Stundenlohn</label>
+          <span class="slider-value" id="val-wage">35 €</span>
+        </div>
+        <input type="range" id="sl-wage" min="15" max="120" value="35"
+          oninput="document.getElementById('val-wage').textContent=this.value+' €'; calculate()">
+        <div class="slider-range"><span>15 €</span><span>120 €</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label-row">
+          <label>Stunden/Woche für manuelle Tasks</label>
+          <span class="slider-value" id="val-hours">25 Std.</span>
+        </div>
+        <input type="range" id="sl-hours" min="1" max="40" value="25"
+          oninput="document.getElementById('val-hours').textContent=this.value+' Std.'; calculate()">
+        <div class="slider-range"><span>1</span><span>40</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label-row">
+          <label>Automatisierungspotenzial</label>
+          <span class="slider-value" id="val-auto">60 %</span>
+        </div>
+        <input type="range" id="sl-auto" min="10" max="90" value="60"
+          oninput="document.getElementById('val-auto').textContent=this.value+' %'; calculate()">
+        <div class="slider-range"><span>10 %</span><span>90 %</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label-row">
+          <label>Implementierungskosten (einmalig)</label>
+          <span class="slider-value" id="val-impl">25.000 €</span>
+        </div>
+        <input type="range" id="sl-impl" min="2000" max="200000" step="1000" value="25000"
+          oninput="document.getElementById('val-impl').textContent=Number(this.value).toLocaleString('de-DE')+' €'; calculate()">
+        <div class="slider-range"><span>2.000 €</span><span>200.000 €</span></div>
+      </div>
+
+      <div class="slider-row">
+        <div class="slider-label-row">
+          <label>Monatliche Betriebskosten</label>
+          <span class="slider-value" id="val-opex">2.000 €</span>
+        </div>
+        <input type="range" id="sl-opex" min="100" max="10000" step="100" value="2000"
+          oninput="document.getElementById('val-opex').textContent=Number(this.value).toLocaleString('de-DE')+' €'; calculate()">
+        <div class="slider-range"><span>100 €</span><span>10.000 €</span></div>
+      </div>
+    </div>
+
+    <!-- Right: Outputs -->
+    <div>
+
+      <!-- Hero KPI -->
+      <div class="hero-metric">
+        <div class="label">Jährliche Netto-Einsparung (ab Jahr 2)</div>
+        <div class="value" id="out-net">343.500 €</div>
+        <div class="hero-kpis">
+          <div class="kpi-item">
+            <div class="kpi-label">Break-even</div>
+            <div class="kpi-val" id="out-be">1 Monat</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">3-Jahres-ROI</div>
+            <div class="kpi-val" id="out-roi">4.022 %</div>
+          </div>
+          <div class="kpi-item">
+            <div class="kpi-label">5-Jahres-Gewinn</div>
+            <div class="kpi-val" id="out-5y">1.692.500 €</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Breakdown + Chart side by side on wide screens -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+
+        <!-- Breakdown -->
+        <div class="glass">
+          <p class="glass-title">Kostenaufschlüsselung / Jahr</p>
+
+          <div class="breakdown-row">
+            <div class="breakdown-top">
+              <div class="breakdown-name">
+                <span class="breakdown-dot" style="background:#22d3ee"></span>
+                Personalkosten-Einsparung
+              </div>
+              <span class="breakdown-val" id="out-personnel">273.000 €</span>
+            </div>
+            <div class="breakdown-bar-bg">
+              <div class="breakdown-bar" id="bar-personnel" style="width:70%;background:#22d3ee;"></div>
+            </div>
+          </div>
+
+          <div class="breakdown-row">
+            <div class="breakdown-top">
+              <div class="breakdown-name">
+                <span class="breakdown-dot" style="background:#818cf8"></span>
+                Fehlerkosten-Reduktion
+              </div>
+              <span class="breakdown-val" id="out-errors">67.200 €</span>
+            </div>
+            <div class="breakdown-bar-bg">
+              <div class="breakdown-bar" id="bar-errors" style="width:17%;background:#818cf8;"></div>
+            </div>
+          </div>
+
+          <div class="breakdown-row">
+            <div class="breakdown-top">
+              <div class="breakdown-name">
+                <span class="breakdown-dot" style="background:#38bdf8"></span>
+                Produktivitätsgewinn
+              </div>
+              <span class="breakdown-val" id="out-productivity">27.300 €</span>
+            </div>
+            <div class="breakdown-bar-bg">
+              <div class="breakdown-bar" id="bar-productivity" style="width:7%;background:#38bdf8;"></div>
+            </div>
+          </div>
+
+          <hr class="breakdown-divider">
+
+          <div class="breakdown-opex">
+            <div class="breakdown-opex-name">
+              <span class="breakdown-dot" style="background:#f87171"></span>
+              Betriebskosten (p.a.)
+            </div>
+            <span class="breakdown-opex-val" id="out-opex-display">−24.000 €</span>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="glass chart-wrap" style="padding:1.25rem;">
+          <p class="glass-title">5-Jahres-Projektion</p>
+          <canvas id="roi-chart"></canvas>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-section">
+    <div>
+      <h2>Bereit, diese Zahlen Realität werden zu lassen?</h2>
+      <p>Ich analysiere Ihr Unternehmen und zeige konkrete Automatisierungspotenziale — ohne Software zu verkaufen.</p>
+    </div>
+    <a href="https://sozius.site/#kontakt" class="btn-cyan">
+      Kostenloses Erstgespräch buchen
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
+      </svg>
+    </a>
+  </div>
+
+  <p class="disclaimer">* Alle Berechnungen basieren auf branchenüblichen Benchmarks. Individuelle Ergebnisse können abweichen.</p>
+
+</div>
+
+<script>
+  const scenarios = [
+    { errorFactor: 0.150, productivityFactor: 0.120 },
+    { errorFactor: 0.350, productivityFactor: 0.080 },
+    { errorFactor: 0.450, productivityFactor: 0.050 },
+    { errorFactor: 0.200, productivityFactor: 0.150 },
+  ];
+
+  let activeScenario = 0;
+  let chart = null;
+
+  function fmt(v) {
+    return new Intl.NumberFormat('de-DE', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(v);
+  }
+
+  function setScenario(i) {
+    activeScenario = i;
+    for (let j = 0; j < 4; j++) {
+      document.getElementById('sc-' + j).classList.toggle('active', j === i);
+    }
+    calculate();
+  }
+
+  function calculate() {
+    const employees = +document.getElementById('sl-employees').value;
+    const wage      = +document.getElementById('sl-wage').value;
+    const hours     = +document.getElementById('sl-hours').value;
+    const autoRate  = +document.getElementById('sl-auto').value / 100;
+    const implCost  = +document.getElementById('sl-impl').value;
+    const opexMo    = +document.getElementById('sl-opex').value;
+
+    const sc = scenarios[activeScenario];
+    const opexAnnual = opexMo * 12;
+
+    const personnel   = employees * hours * 52 * wage * autoRate;
+    const errors      = personnel * sc.errorFactor;
+    const productivity = personnel * sc.productivityFactor;
+    const total       = personnel + errors + productivity;
+    const netAnnual   = total - opexAnnual;
+
+    // Break-even
+    let beText;
+    if (netAnnual <= 0) {
+      beText = 'N/A';
+    } else {
+      const m = implCost / (netAnnual / 12);
+      if (m < 1)       beText = '< 1 Monat';
+      else if (m < 1.5) beText = '1 Monat';
+      else if (m < 12)  beText = Math.ceil(m) + ' Monate';
+      else              beText = (m / 12).toFixed(1).replace('.', ',') + ' Jahre';
+    }
+
+    const roi3y = implCost > 0 ? ((netAnnual * 3 - implCost) / implCost * 100) : 0;
+    const gain5y = netAnnual * 5 - implCost;
+
+    // Bars
+    const w = (v) => total > 0 ? Math.max(2, v / total * 100).toFixed(1) + '%' : '0%';
+
+    // Update
+    setText('out-net', fmt(netAnnual));
+    setText('out-be', beText);
+    setText('out-roi', roi3y > 0 ? roi3y.toLocaleString('de-DE', { maximumFractionDigits: 0 }) + ' %' : 'N/A');
+    setText('out-5y', fmt(gain5y));
+    setText('out-personnel', fmt(personnel));
+    setText('out-errors', fmt(errors));
+    setText('out-productivity', fmt(productivity));
+    setText('out-opex-display', '−' + fmt(opexAnnual));
+
+    document.getElementById('bar-personnel').style.width   = w(personnel);
+    document.getElementById('bar-errors').style.width      = w(errors);
+    document.getElementById('bar-productivity').style.width = w(productivity);
+
+    animate('out-net');
+    animate('out-roi');
+
+    updateChart(implCost, netAnnual);
+  }
+
+  function setText(id, val) {
+    document.getElementById(id).textContent = val;
+  }
+  function animate(id) {
+    const el = document.getElementById(id);
+    el.classList.remove('animating');
+    void el.offsetWidth;
+    el.classList.add('animating');
+  }
+
+  function updateChart(implCost, netAnnual) {
+    const labels = ['Start','Jahr 1','Jahr 2','Jahr 3','Jahr 4','Jahr 5'];
+    const data   = Array.from({length:6}, (_,i) => -implCost + netAnnual * i);
+    const ptColors = data.map(v => v >= 0 ? '#22d3ee' : '#f87171');
+
+    if (chart) {
+      chart.data.datasets[0].data = data;
+      chart.data.datasets[0].pointBackgroundColor = ptColors;
+      chart.update('none');
+      return;
+    }
+
+    const ctx = document.getElementById('roi-chart').getContext('2d');
+    const grad = ctx.createLinearGradient(0, 0, 0, 180);
+    grad.addColorStop(0, 'rgba(34,211,238,0.25)');
+    grad.addColorStop(1, 'rgba(34,211,238,0)');
+
+    chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          data,
+          borderColor: '#22d3ee',
+          backgroundColor: grad,
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: ptColors,
+          pointBorderColor: '#0a1628',
+          pointBorderWidth: 2,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        interaction: { mode:'index', intersect:false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0d1937',
+            borderColor: 'rgba(34,211,238,0.3)',
+            borderWidth: 1,
+            titleColor: 'rgba(34,211,238,0.8)',
+            bodyColor: '#f0f4ff',
+            padding: 10,
+            cornerRadius: 8,
+            callbacks: {
+              label: ctx => '  ' + fmt(ctx.raw)
+            }
+          }
+        },
+        scales: {
+          y: {
+            ticks: {
+              callback: v => {
+                const a = Math.abs(v);
+                const s = v < 0 ? '−' : '';
+                if (a >= 1000000) return s + (a/1000000).toFixed(1) + ' Mio.';
+                if (a >= 1000)    return s + (a/1000).toFixed(0) + 'k';
+                return s + a;
+              },
+              color: 'rgba(255,255,255,0.3)',
+              font: { size: 9, family: 'Inter' }
+            },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            border: { display: false }
+          },
+          x: {
+            grid: { display: false },
+            ticks: { color: 'rgba(255,255,255,0.3)', font: { size: 9, family: 'Inter' } },
+            border: { display: false }
+          }
+        }
+      }
+    });
+  }
+
+  calculate();
+</script>
+</body>
+</html>
